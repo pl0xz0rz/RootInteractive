@@ -1,5 +1,5 @@
 from bokeh.plotting import figure, show, output_file
-from bokeh.models import ColumnDataSource, ColorBar, HoverTool, CDSView, GroupFilter, VBar, HBar
+from bokeh.models import ColumnDataSource, ColorBar, HoverTool, CDSView, IndexFilter, VBar, HBar
 from bokeh.transform import *
 from RootInteractive.Tools.aliTreePlayer import *
 # from bokehTools import *
@@ -121,7 +121,7 @@ def makeJScallback(widgetDict, **kwargs):
     return callback
 
 
-def makeJScallbackOptimized(widgetDict, cdsOrig, cdsSel, **kwargs):
+def makeJScallbackOptimized(widgetDict, cdsOrig, indexFilter, view, **kwargs):
     options = {
         "verbose": 0,
         "nPointRender": 100000,
@@ -133,18 +133,15 @@ def makeJScallbackOptimized(widgetDict, cdsOrig, cdsSel, **kwargs):
         """
     const t0 = performance.now();
     const dataOrig = cdsOrig.data;
-    let dataSel = cdsSel.data;
-    console.log('%f\t%f\t',dataOrig.index.length, dataSel.index.length);
+    let indices = indexFilter.indices;
+    console.log('%f\\t%f\\t',dataOrig.index.length, indices.length);
     const nPointRender = options.nPointRender;
     let nSelected=0;
-    for (const i in dataSel){
-        dataSel[i] = [];
-    }
     const precision = 0.000001;
     const size = dataOrig.index.length;
     let selectedPointsBuffer = new ArrayBuffer(size);
     let isSelected = new Uint8Array(selectedPointsBuffer);
-    let permutationFilter = [];
+    indices.length = 0;
     for(let i=0; i<size; i++){
         isSelected[i] = 1;
     }
@@ -209,49 +206,40 @@ def makeJScallbackOptimized(widgetDict, cdsOrig, cdsSel, **kwargs):
         let randomIndex = 0;
         if (isSelected[i]){
             if(nSelected < nPointRender){
-                permutationFilter.push(i);
+                indices.push(i);
             } else if(Math.random() < 1 / nSelected) {
                 randomIndex = Math.floor(Math.random()*nPointRender);
-                permutationFilter[randomIndex] = i;
+                indices[randomIndex] = i;
             }
             nSelected++;
         }
     }
     nSelected = Math.min(nSelected, nPointRender);
-    for (const key in dataSel){
-        const colSel = dataSel[key];
-        const colOrig = dataOrig[key];
-        for(let i=0; i<nSelected; i++){
-            colSel[i] = colOrig[permutationFilter[i]];
-        }
-    }
+    view.compute_indices();
     const t1 = performance.now();
     console.log(`Filtering took ${t1 - t0} milliseconds.`);
     const cmapDict = options.cmapDict;
     if (cmapDict !== undefined && nSelected !== 0){
         for(const key in cmapDict){
             const cmapList = cmapDict[key];
-            const col = dataSel[key];
-            const low = col.reduce((acc, cur)=>Math.min(acc,cur),col[0]);
-            const high = col.reduce((acc, cur)=>Math.max(acc,cur),col[0]);
+            const col = dataOrig[key];
+            const low = indices.reduce((acc, cur)=>Math.min(acc,col[cur]),col[indices[0]]);
+            const high = indices.reduce((acc, cur)=>Math.max(acc,col[cur]),col[indices[0]]);
             for(let i=0; i<cmapList.length; i++){
                 cmapList[i].transform.high = high;
                 cmapList[i].transform.low = low;
-                cmapList[i].transform.change.emit();
+    //            cmapList[i].transform.change.emit();
             }
         }
     }
     const t2 = performance.now();
     console.log(`Updating colormaps took ${t2 - t1} milliseconds.`);
-    cdsSel.change.emit();
-    const t3 = performance.now();
-    console.log(`Updating cds took ${t3 - t2} milliseconds.`);
     console.log(\"nSelected:%d\",nSelected);  
     """
     if options["verbose"] > 0:
         logging.info("makeJScallback:\n", code)
     # print(code)
-    callback = CustomJS(args={'widgetDict': widgetDict, 'cdsOrig': cdsOrig, 'cdsSel': cdsSel, 'options': options},
+    callback = CustomJS(args={'widgetDict': widgetDict, 'cdsOrig': cdsOrig, 'indexFilter': indexFilter, 'view':view, 'options': options},
                         code=code)
     return callback
 
@@ -739,7 +727,8 @@ def bokehDrawArray(dataFrame, query, figureArray, **kwargs):
         "rescaleColorMapper": False,
         "filter": '',
         'doDraw': 0,
-        'nPointRender': 100000
+        'nPointRender': 100000,
+        'nPointMax': 1000000
     }
     options.update(kwargs)
     dfQuery = dataFrame.query(query)
@@ -780,9 +769,11 @@ def bokehDrawArray(dataFrame, query, figureArray, **kwargs):
 
     try:
         #source = ColumnDataSource(dfQuery)
-        source  = ColumnDataSource(dfQuery.sample(min(dfQuery.shape[0],options['nPointRender'])))
-    except:
-        logging.error("Invalid source:", source)
+        source = ColumnDataSource(dfQuery.sample(min(dfQuery.shape[0], options['nPointMax'])))
+        index_filter = IndexFilter(np.arange(min(dfQuery.shape[0], options['nPointRender'], options['nPointMax'])))
+        view = CDSView(source=source, filters=[index_filter])
+    except RuntimeError:
+        logging.error("Invalid source: ", source)
     # define default options
 
     plotArray = []
@@ -800,7 +791,7 @@ def bokehDrawArray(dataFrame, query, figureArray, **kwargs):
             }
             if len(variables) > 1:
                 TOptions.update(variables[1])
-            plotArray.append(makeBokehDataTable(dfQuery, source, TOptions['include'], TOptions['exclude']))
+            plotArray.append(makeBokehDataTable(dfQuery, source, TOptions['include'], TOptions['exclude'], view=view))
             continue
         xAxisTitle = ""
         yAxisTitle = ""
@@ -877,15 +868,15 @@ def bokehDrawArray(dataFrame, query, figureArray, **kwargs):
 
             #                zAxisTitle +=varColor + ","
             #            view = CDSView(source=source, filters=[GroupFilter(column_name=optionLocal['filter'], group=True)])
-            figureI.scatter(x=varNameX, y=varNameY, fill_alpha=1, source=source, size=optionLocal['size'],
+            figureI.scatter(x=varNameX, y=varNameY, fill_alpha=1, source=source, view=view, size=optionLocal['size'],
                             color=color,
                             marker=marker, legend_label=varY + " vs " + varX)
             if ('errX' in optionLocal.keys()) & (optionLocal['errX'] != ''):
                 errorX = HBar(y=varNameY, height=0, left=varNameX+"_lower", right=varNameX+"_upper", line_color=color)
-                figureI.add_glyph(source, errorX)
+                figureI.add_glyph(source, errorX, view=view)
             if ('errY' in optionLocal.keys()) & (optionLocal['errY'] != ''):
                 errorY = VBar(x=varNameX, width=0, bottom=varNameY+"_lower", top=varNameY+"_upper", line_color=color)
-                figureI.add_glyph(source, errorY)
+                figureI.add_glyph(source, errorY, view=view)
             #    errors = Band(base=varNameX, lower=varNameY+"_lower", upper=varNameY+"_upper",source=source)
             #    figureI.add_layout(errors)
 
@@ -906,7 +897,7 @@ def bokehDrawArray(dataFrame, query, figureArray, **kwargs):
             pAll = gridplotRow(layoutList, **optionsLayout)
     if options['doDraw'] > 0:
         show(pAll)
-    return pAll, source, layoutList, dfQuery, colorMapperDict
+    return pAll, source, layoutList, dfQuery, colorMapperDict, view, index_filter
 
 
 def makeBokehSliderWidget(df, isRange, params, **kwargs):
@@ -1004,7 +995,7 @@ def makeBokehCheckboxWidget(df, params, **kwargs):
     return CheckboxGroup(labels=optionsPlot, active=[])
 
 
-def makeBokehWidgets(df, widgetParams, cdsOrig, cdsSel, cmapDict=None, nPointRender=10000):
+def makeBokehWidgets(df, widgetParams, cdsOrig, indexFilter, view, cmapDict=None, nPointRender=10000):
     widgetArray = []
     widgetDict = {}
     for widget in widgetParams:
@@ -1028,7 +1019,7 @@ def makeBokehWidgets(df, widgetParams, cdsOrig, cdsSel, cmapDict=None, nPointRen
             widgetArray.append(localWidget)
         widgetDict[params[0]] = localWidget
     # callback = makeJScallback(widgetDict, nPointRender=nPointRender)
-    callback = makeJScallbackOptimized(widgetDict, cdsOrig, cdsSel, cmapDict=cmapDict, nPointRender=nPointRender)
+    callback = makeJScallbackOptimized(widgetDict, cdsOrig, indexFilter, view, cmapDict=cmapDict, nPointRender=nPointRender)
     for iWidget in widgetArray:
         if isinstance(iWidget, CheckboxGroup):
             iWidget.js_on_click(callback)

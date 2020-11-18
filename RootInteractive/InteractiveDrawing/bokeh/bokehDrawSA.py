@@ -90,6 +90,8 @@ class bokehDrawSA(object):
         self.pAll=gridplotRow(self.plotArray)
         self.handle=show(self.pAll,notebook_handle=self.isNotebook)
         self.cmapDist = None
+        self.view = None
+        self.filter = None
 
     @classmethod
     def fromArray(cls, dataFrame, query, figureArray, widgetsDescription, **kwargs):
@@ -134,10 +136,10 @@ class bokehDrawSA(object):
                 varList+=w[1][0]+":"
         kwargs["optionList"]=optionList
         self = cls(dataFrame, query, "", "", "", "", None, variables=varList, **kwargs)
-        self.figure, self.cdsSel, self.plotArray, dataFrameOrig, self.cmapDict = bokehDrawArray(self.dataSource, query,
-                                                                                                figureArray, **kwargs)
-        self.cdsOrig=ColumnDataSource(dataFrameOrig)
-        #self.Widgets = self.initWidgets(widgetString)
+        self.figure, self.cdsSel, self.plotArray, dataFrameOrig, self.cmapDict,\
+            self.view, self.filter = bokehDrawArray(self.dataSource, query, figureArray, **kwargs)
+        # self.cdsOrig=ColumnDataSource(dataFrameOrig)
+        # self.Widgets = self.initWidgets(widgetString)
         widgetList=self.initWidgets(widgetsDescription)
         self.plotArray.append(widgetList)
         self.pAll=gridplotRow(self.plotArray,sizing_mode=self.options['sizing_mode'])
@@ -154,8 +156,9 @@ class bokehDrawSA(object):
                 >>>  widgets="slider.A(0,100,0.5,0,100),slider.B(0,100,5,0,100),slider.C(0,100,1,1,100):slider.D(0,100,1,1,100)"
         :return: VBox includes all widgets
         """
-        if type(widgetsDescription)==list:
-            widgetList= makeBokehWidgets(self.dataSource, widgetsDescription, self.cdsOrig, self.cdsSel, self.cmapDict, nPointRender = self.options['nPointRender'])
+        if type(widgetsDescription) == list:
+            widgetList= makeBokehWidgets(self.dataSource, widgetsDescription, self.cdsSel, self.filter, self.view, self.cmapDict,
+                                         nPointRender=self.options['nPointRender'])
             if isinstance(self.widgetLayout,list):
                 widgetList=processBokehLayoutArray(self.widgetLayout, widgetList)
             else:
