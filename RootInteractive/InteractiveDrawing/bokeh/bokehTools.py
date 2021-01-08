@@ -53,22 +53,29 @@ def makeJScallbackOptimized(widgetDict, cdsOrig, cdsSel, **kwargs):
     }
     let permutationFilter = [];
     let indicesAll = [];
+    let selStr = "";
     for (const key in widgetDict){
-        const widget = widgetDict[key];
+        const widget = widgetDict[key].widget;
         const widgetType = widget.type;
+        const widgetStrPrecision = widgetDict[key].str_precision;
+        const numberFormat = new Intl.NumberFormat({maximumSignificantDigits: widgetStrPrecision});
         if(widgetType == "Slider"){
             const col = dataOrig[key];
             const widgetValue = widget.value;
             const widgetStep = widget.step;
+            const low = widgetValue-0.5*widgetStep;
+            const high = widgetValue+0.5*widgetStep;
+            selStr += numberFormat.format(low) + " < " + key + " < " + numberFormat.format(high) + "; ";
             for(let i=0; i<size; i++){
-                isSelected[i] &= (col[i] >= widgetValue-0.5*widgetStep);
-                isSelected[i] &= (col[i] <= widgetValue+0.5*widgetStep);
+                isSelected[i] &= (col[i] >= low);
+                isSelected[i] &= (col[i] <= high);
             }
         }
         if(widgetType == "RangeSlider"){
             const col = dataOrig[key];
             const low = widget.value[0];
             const high = widget.value[1];
+            selStr += numberFormat.format(low) + " < " + key + " < " + numberFormat.format(high) + "; ";
             for(let i=0; i<size; i++){
                 isSelected[i] &= (col[i] >= low);
                 isSelected[i] &= (col[i] <= high);
@@ -79,6 +86,7 @@ def makeJScallbackOptimized(widgetDict, cdsOrig, cdsSel, **kwargs):
             let widgetValue = widget.value;
             widgetValue = widgetValue === "True" ? true : widgetValue;
             widgetValue = widgetValue === "False" ? false : widgetValue;
+            selStr += key + " = " + numberFormat.format(widgetValue) + "; "
             for(let i=0; i<size; i++){
                 let isOK = Math.abs(col[i] - widgetValue) <= widgetValue * precision;
                 isOK|=(col[i] == widgetValue)
@@ -104,6 +112,7 @@ def makeJScallbackOptimized(widgetDict, cdsOrig, cdsSel, **kwargs):
         if(widgetType == "CheckboxGroup"){
             const col = dataOrig[key];
             const widgetValue = widget.value;
+            selStr += key + " = " + numberFormat.format(widgetValue) + "; "
             for(let i=0; i<size; i++){
                 isOK = Math.abs(col[i] - widgetValue) <= widgetValue * precision;
                 isSelected &= (col[i] == widgetValue) | isOK;
@@ -184,6 +193,7 @@ def makeJScallbackOptimized(widgetDict, cdsOrig, cdsSel, **kwargs):
         console.log(`Updating cds took ${t4 - t3} milliseconds.`);
     }
     console.log(\"nSelected:%d\",nSelected);
+    console.log(selStr);
     """
     if options["verbose"] > 0:
         logging.info("makeJScallback:\n", code)
@@ -821,10 +831,10 @@ def makeBokehWidgets(df, widgetParams, cdsOrig, cdsSel, histogramList=[], cmapDi
     for widget in widgetParams:
         type = widget[0]
         params = widget[1]
-        options = {}
+        options = {"strPrecision": 3}
         localWidget = None
         if len(widget) == 3:
-            options = widget[2]
+            options.update(widget[2])
         if type == 'range':
             localWidget = makeBokehSliderWidget(df, True, params, **options)
         if type == 'slider':
@@ -837,7 +847,7 @@ def makeBokehWidgets(df, widgetParams, cdsOrig, cdsSel, histogramList=[], cmapDi
         #    localWidget=makeBokehCheckboxWidget(df,params,**options)
         if localWidget:
             widgetArray.append(localWidget)
-        widgetDict[params[0]] = localWidget
+        widgetDict[params[0]] = {"widget": localWidget, "str_precision": options["strPrecision"]}
     # callback = makeJScallback(widgetDict, nPointRender=nPointRender)
     callback = makeJScallbackOptimized(widgetDict, cdsOrig, cdsSel, histogramList=histogramList, cmapDict=cmapDict, nPointRender=nPointRender, cdsCompress=cdsCompress)
     #callback = makeJScallbackOptimized(widgetDict, cdsOrig, cdsSel, histogramList=histogramList, cmapDict=cmapDict, nPointRender=nPointRender)
