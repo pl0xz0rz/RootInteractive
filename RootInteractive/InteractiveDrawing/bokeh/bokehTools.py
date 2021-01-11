@@ -86,7 +86,7 @@ def makeJScallbackOptimized(widgetDict, cdsOrig, cdsSel, **kwargs):
             let widgetValue = widget.value;
             widgetValue = widgetValue === "True" ? true : widgetValue;
             widgetValue = widgetValue === "False" ? false : widgetValue;
-            selStr += key + " = " + numberFormat.format(widgetValue) + "; "
+            selStr += key + " = " + numberFormat.format(widgetValue) + "; ";
             for(let i=0; i<size; i++){
                 let isOK = Math.abs(col[i] - widgetValue) <= widgetValue * precision;
                 isOK|=(col[i] == widgetValue)
@@ -101,6 +101,11 @@ def makeJScallbackOptimized(widgetDict, cdsOrig, cdsSel, **kwargs):
                 if(!isNaN(val)) return Number(val);
                 return val;
             });
+            selStr += key + " in {" + widgetValue[0]; 
+            for(let i=1; i<widgetValue.length; i++){
+                selStr += ", " + widgetValue[i];
+            }
+            selStr += "}; ";
             for(let i=0; i<size; i++){
                 let isOK = widgetValue.reduce((acc,cur)=>acc|Math.abs(cur-col[i])<precision,0);
                 if (!isOK){
