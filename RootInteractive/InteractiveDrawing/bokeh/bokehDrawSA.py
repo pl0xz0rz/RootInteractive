@@ -91,6 +91,7 @@ class bokehDrawSA(object):
         self.handle=show(self.pAll,notebook_handle=self.isNotebook)
         self.cmapDist = None
         self.histoList = None
+        self.selLabelList = None
 
     @classmethod
     def fromArray(cls, dataFrame, query, figureArray, widgetsDescription, **kwargs):
@@ -135,7 +136,7 @@ class bokehDrawSA(object):
                 varList+=w[1][0]+":"
         kwargs["optionList"]=optionList
         self = cls(dataFrame, query, "", "", "", "", None, variables=varList, **kwargs)
-        self.figure, self.cdsSel, self.plotArray, dataFrameOrig, self.cmapDict, self.cdsOrig, self.histoList = bokehDrawArray(self.dataSource, query,
+        self.figure, self.cdsSel, self.plotArray, dataFrameOrig, self.cmapDict, self.cdsOrig, self.histoList, self.selLabelList = bokehDrawArray(self.dataSource, query,
                                                                                                 figureArray, **kwargs)
         # self.cdsOrig=ColumnDataSource(dataFrameOrig)
         #self.Widgets = self.initWidgets(widgetString)

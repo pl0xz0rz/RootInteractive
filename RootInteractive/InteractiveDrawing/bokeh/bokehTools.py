@@ -1,5 +1,5 @@
 from bokeh.plotting import figure, show, output_file
-from bokeh.models import ColumnDataSource, ColorBar, HoverTool, CDSView, GroupFilter, VBar, HBar, Quad, Image
+from bokeh.models import ColumnDataSource, ColorBar, HoverTool, CDSView, GroupFilter, VBar, HBar, Quad, Label
 from bokeh.transform import *
 from RootInteractive.Tools.aliTreePlayer import *
 # from bokehTools import *
@@ -101,7 +101,7 @@ def makeJScallbackOptimized(widgetDict, cdsOrig, cdsSel, **kwargs):
                 if(!isNaN(val)) return Number(val);
                 return val;
             });
-            selStr += key + " in {" + widgetValue[0]; 
+            selStr += key + " in {" + widgetValue[0];
             for(let i=1; i<widgetValue.length; i++){
                 selStr += ", " + widgetValue[i];
             }
@@ -475,13 +475,10 @@ def bokehDrawArray(dataFrame, query, figureArray, histogramArray=[], **kwargs):
         'doDraw': 0,
         "legend_field": None,
         'nPointRender': 10000,
-        "nbins": 10,
-        "weights": None,
-        "histo2d": False,
-        "range": None,
         "flip_histogram_axes": False,
         "show_histogram_error": False,
-        "arrayCompression": None
+        "arrayCompression": None,
+        "add_selection_label": False
     }
     options.update(kwargs)
     dfQuery = dataFrame.query(query)
@@ -512,6 +509,8 @@ def bokehDrawArray(dataFrame, query, figureArray, histogramArray=[], **kwargs):
     histoList = []
     for i in histogramDict:
         histoList.append(histogramDict[i]["cds"])
+
+    selLabelList = []
 
     if isinstance(figureArray[-1], dict):
         options.update(figureArray[-1])
@@ -643,6 +642,13 @@ def bokehDrawArray(dataFrame, query, figureArray, histogramArray=[], **kwargs):
 
         if color_bar != None:
             figureI.add_layout(color_bar, 'right')
+        if optionLocal["add_selection_label"]:
+            selLabel = Label(x=70, y=70, x_units='screen', y_units='screen',
+                             text='Selection: ', render_mode='css',
+                             border_line_color='black', border_line_alpha=1.0,
+                             background_fill_color='white', background_fill_alpha=1.0)
+            figureI.add_layout(selLabel)
+            selLabelList.append(selLabel)
         figureI.legend.click_policy = "hide"
         #        zAxisTitle=zAxisTitle[:-1]
         #        if(len(zAxisTitle)>0):
@@ -660,7 +666,7 @@ def bokehDrawArray(dataFrame, query, figureArray, histogramArray=[], **kwargs):
         cdsCompress0= compressCDSPipe(dfQuery,options["arrayCompression"],1)
         cdsCompress=CDSCompress(source=None,inputData=cdsCompress0)
         cdsFull=cdsCompress
-    return pAll, source, layoutList, dfQuery, colorMapperDict, cdsFull, histoList
+    return pAll, source, layoutList, dfQuery, colorMapperDict, cdsFull, histoList, selLabelList
 
 
 def addHisto2dGlyph(fig, x, y, histoHandle, colorMapperDict, color, marker, dfQuery, options):
