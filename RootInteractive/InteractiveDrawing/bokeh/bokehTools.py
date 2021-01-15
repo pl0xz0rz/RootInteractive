@@ -18,6 +18,7 @@ from RootInteractive.InteractiveDrawing.bokeh.Histo2dCDS import Histo2dCDS
 import copy
 from RootInteractive.Tools.compressArray import *
 from RootInteractive.InteractiveDrawing.bokeh.CDSCompress import CDSCompress
+from RootInteractive.InteractiveDrawing.bokeh.InnerJoinCDS import InnerJoinCDS
 # tuple of Bokeh markers
 bokehMarkers = ["square", "circle", "triangle", "diamond", "squarecross", "circlecross", "diamondcross", "cross",
                 "dash", "hex", "invertedtriangle", "asterisk", "squareX", "X"]
@@ -478,7 +479,8 @@ def bokehDrawArray(dataFrame, query, figureArray, histogramArray=[], **kwargs):
         "flip_histogram_axes": False,
         "show_histogram_error": False,
         "arrayCompression": None,
-        "add_selection_label": False
+        "add_selection_label": False,
+        "indicesName": "indices"
     }
     options.update(kwargs)
     dfQuery = dataFrame.query(query)
@@ -504,7 +506,7 @@ def bokehDrawArray(dataFrame, query, figureArray, histogramArray=[], **kwargs):
     colorAll = all_palettes[options['colors']]
     colorMapperDict = {}
 
-    histogramDict, dfQuery = bokehMakeHistogramCDS(dfQuery, cdsFull, histogramArray)
+    histogramDict = bokehMakeHistogramCDS(dfQuery, cdsFull, histogramArray)
 
     histoList = []
     for i in histogramDict:
@@ -895,7 +897,7 @@ def bokehMakeHistogramCDS(dfQuery, cdsFull, histogramArray=[], **kwargs):
                                     range=optionLocal["range"], sample_x=varNameX, sample_y=varNameY, weights=optionLocal["weights"])
             histoDict[histoName] = {"cds": cdsHisto, "type": "histo2d", "name": histoName,
                                     "variables": sampleVars}
-    return histoDict, dfQuery
+    return histoDict
 
 
 def makeDerivedColumns(dfQuery, figureArray, histogramArray, options):
