@@ -43,5 +43,3 @@ widgetDesc = [[0]]
 def test_join():
     output_file("test_join_inner.html")
     bokehDrawSA.fromArray(df, None, figureArray, widgetParams, sourceArray=sourceArray, layout=figureLayout, widgetLayout=widgetDesc)
-
-test_join()
