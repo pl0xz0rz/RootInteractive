@@ -17,6 +17,22 @@ export namespace HistoNdCDS {
 
 export interface HistoNdCDS extends HistoNdCDS.Attrs {}
 
+function zero_histogram(weights: string | null, bincount_old: bincount_type | null, strides: number[]): bincount_type{
+  const length = strides[strides.length-1]
+  if(bincount_old != null){
+    bincount_old.fill(0)
+    return bincount_old
+  }
+  if(weights === null){
+    return new Int32Array(length)
+  }
+  let bincount = Array(length)
+  bincount.fill(0)
+  return bincount
+}
+
+type bincount_type = number[] | Int32Array
+
 export class HistoNdCDS extends ColumnarDataSource {
   properties: HistoNdCDS.Props
 
@@ -48,7 +64,7 @@ export class HistoNdCDS extends ColumnarDataSource {
   initialize(): void {
     super.initialize()
 
-    this.data = {"bin_count":[]}
+    this.data = {}
     this.view = null
     this._bin_indices = []
     this.update_range()
@@ -65,25 +81,29 @@ export class HistoNdCDS extends ColumnarDataSource {
   }
 
   update_data(indices: number[] | null = null): void {
-      let bincount = this.data["bin_count"] as number[]
-      bincount.length = length
       if(indices != null){
         //TODO: Make this actually do something
       } else {
-        bincount = this.histogram(this.weights)
+        let bincount = this.data['bin_count'] as bincount_type
+        bincount = zero_histogram(this.weights, bincount, this._strides)
+        bincount = this.histogram(this.weights, bincount)
+        this.data["bin_count"] = bincount
+        this.data["errorbar_low"] = bincount.map((x: number)=>x+Math.sqrt(x))
+        this.data["errorbar_high"] = bincount.map((x: number)=>x-Math.sqrt(x))
         if(this.histograms !== null){
           for (const key in this.histograms){
             if(this.histograms[key] === null){
-              this.data[key] = this.histogram(null)
+              let col = this.data[key] as bincount_type
+              col = zero_histogram(this.weights, col, this._strides)
+              this.data[key] = this.histogram(null, col)
             } else {
-              this.data[key] = this.histogram(this.histograms[key].weights)
+              let col = this.data[key] as bincount_type
+              col = zero_histogram(this.weights, col, this._strides)
+              this.data[key] = this.histogram(this.histograms[key].weights, col)
             }
           }
         }
       }
-      this.data["bin_count"] = bincount
-      this.data["errorbar_low"] = bincount.map(x=>x+Math.sqrt(x))
-      this.data["errorbar_high"] = bincount.map(x=>x-Math.sqrt(x))
       this.change.emit()
   }
 
@@ -192,14 +212,20 @@ export class HistoNdCDS extends ColumnarDataSource {
       this.update_data()
   }
 
-  histogram(weights: string | null): number[]{
+  histogram(weights: string | null, bincount_old: bincount_type): bincount_type{
     const length = this._strides[this._strides.length-1]
     let sample_array: number[][] = []
     for (const column_name of this.sample_variables) {
       sample_array.push(this.source.get_array(column_name))
     }
-    let bincount: number[] = Array(length)
-    bincount.fill(0)
+    let bincount
+    if(bincount_old){
+      bincount = bincount_old
+    } else {
+      bincount = Array(length)
+      bincount.fill(0)
+    }
+
     const view_indices = this.view
     if(view_indices === null){
       const n_indices = this.source.length
