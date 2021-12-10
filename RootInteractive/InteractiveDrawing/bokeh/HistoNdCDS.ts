@@ -204,7 +204,7 @@ export class HistoNdCDS extends ColumnarDataSource {
     if(view_indices === null){
       const n_indices = this.source.length
       if(weights != null){
-        const weights_array = this.source.data[weights]
+        const weights_array = this.source.get_array(weights) as number[]
         for(let i=0; i<n_indices; i++){
           const bin = this.getbin(i, sample_array)
           if(bin >= 0 && bin < length){
@@ -222,7 +222,7 @@ export class HistoNdCDS extends ColumnarDataSource {
     } else {
       const n_indices = view_indices.length
       if(weights != null){
-        const weights_array = this.source.data[weights]
+        const weights_array = this.source.get_array(weights) as number[]
         for(let i=0; i<n_indices; i++){
           let j = view_indices[i]
           const bin = this.getbin(j, sample_array)
