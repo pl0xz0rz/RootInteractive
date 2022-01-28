@@ -160,18 +160,17 @@ def makeJScallbackOptimized(widgetDict, cdsOrig, cdsSel, **kwargs):
     const t2 = performance.now();
     console.log(`Histogramming took ${t2 - t1} milliseconds.`);
     if(nPointRender > 0 && cdsSel != null){
-        console.log(isSelected.reduce((a,b)=>a+b, 0));
+        console.log(\"Number of points before selection:%d\", size);
+        console.log(\"Number of points after selection:%d\", isSelected.reduce((a,b)=>a+b, 0));
         cdsSel.booleans = isSelected
         cdsSel.update()
-        console.log(cdsSel._downsampled_indices.length);
-        console.log(cdsSel.nPoints)
+        console.log(\"Number of points after downsampling:%d\", cdsSel._downsampled_indices.length);
         const t3 = performance.now();
         console.log(`Updating cds took ${t3 - t2} milliseconds.`);
     }
     if(options.cdsHistoSummary !== null){
         options.cdsHistoSummary.update();
     }
-    console.log(\"nSelected:%d\",nSelected);
     """
     if options["verbose"] > 0:
         logging.info("makeJScallback:\n", code)
