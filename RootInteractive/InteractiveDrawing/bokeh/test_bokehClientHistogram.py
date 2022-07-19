@@ -30,7 +30,8 @@ figureLayout: str = '((0,1,2, plot_height=300),commonX=1,plot_height=300,plot_wi
 tooltips = [("VarA", "(@A)"), ("VarB", "(@B)"), ("VarC", "(@C)"), ("VarD", "(@D)")]
 
 parameterArray=[
-    {'name':"size", "value":7, "range": [0, 20]}
+    {'name':"size", "value":7, "range": [0, 20]},
+    {'name':"rangeA", "value":[0, 1], "range": [0, 1]}
 ]
 
 widgetParams=[
@@ -40,10 +41,15 @@ widgetParams=[
     ['range', ['D'], {'type': 'sigma', 'bins': 10, 'sigma': 3}],
     ['multiSelect', ["DDC"]],
     ['slider',["size"]],
+    ['range', ["rangeA"]]
   #  ['select',["CC", 0, 1, 2, 3]],
   #  ['multiSelect',["BoolB"]],
 ]
-widgetLayoutDesc=[[0, 1, 2], [3, 4], [5], {'sizing_mode': 'scale_width'}]
+
+widgetLayoutDesc={
+    "Selection": [[0, 1, 2], [3, 4]],
+    "Histograms": [[5, 6]]
+}
 
 figureLayoutDesc=[
     [0, 1, 2, {'commonX': 1, 'y_visible': 1, 'x_visible':1, 'plot_height': 300}],
@@ -51,10 +57,10 @@ figureLayoutDesc=[
 ]
 
 histoArray = [
-    {"name": "histoA", "variables": ["A"], "nbins":20, "quantiles": [.05, .5, .95], "sum_range": [[.25, .75], [.4, .6]]},
+    {"name": "histoA", "variables": ["A"], "nbins":20, "range": "rangeA", "quantiles": [.05, .5, .95], "sum_range": [[.25, .75], [.4, .6]]},
     {"name": "histoB", "variables": ["B"], "nbins":20, "range": [0, 1]},
     {"name": "histoABC", "variables": ["A", "B", "C"], "nbins":[10, 5, 10], "quantiles": [.5], "sumRange": [[.25, .75]], "axis": [0, 2]},
-    {"name": "histoAB", "variables": ["A", "(A+B)/2"], "nbins": [20, 20], "weights": "D", "quantiles": [.25, .5, .75], "axis": [0, 1]},
+    {"name": "histoAB", "variables": ["A", "(A+B)/2"], "nbins": [20, 20], "range": ["rangeA", None], "weights": "D", "quantiles": [.25, .5, .75], "axis": [0, 1]},
 ]
 
 def testBokehClientHistogram():
