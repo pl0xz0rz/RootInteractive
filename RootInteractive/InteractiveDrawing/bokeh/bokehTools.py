@@ -607,7 +607,7 @@ def bokehDrawArray(dataFrame, query, figureArray, histogramArray=[], parameterAr
         else:
             raise ValueError("Column data sources other than the main one must have a name")
         if cds_name in cdsDict:
-            raise ValueError("Column data source IDs must be unique. Multiple data sources with name: "+ str(cds_name)+ " detected.")
+            raise ValueError("Column data source IDs must be unique. Multiple data sources with ID: "+ str(cds_name)+ " detected.")
         cdsDict[cds_name] = iSource
 
         # Detect the type
@@ -803,7 +803,7 @@ def bokehDrawArray(dataFrame, query, figureArray, histogramArray=[], parameterAr
                 optionWidget = variables[2].copy()
             fakeDf = None
             widgetFilter = None
-            if "callback" not in optionLocal:
+            if "callback" not in optionWidget:
                 if variables[1][0] in paramDict:
                     optionWidget["callback"] = "parameter"
                     varName = variables[1]
