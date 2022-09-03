@@ -1,12 +1,11 @@
 import base64
 import pickle
 import zlib
-from bokeh.util.serialization import *
+from bokeh.util.serialization import transform_column_source_data
 import numpy as np
 import pandas as pd
 import sys
 import re
-import collections
 
 arrayCompressionRelative8=[(".*",[("relative",8), ("code",0), ("zip",0), ("base64",0)])]
 arrayCompressionRelative16=[(".*",[("relative",16), ("code",0), ("zip",0), ("base64",0)])]
