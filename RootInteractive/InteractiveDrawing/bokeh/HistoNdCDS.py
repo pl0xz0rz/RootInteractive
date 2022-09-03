@@ -33,7 +33,7 @@ class HistoNdCDS(ColumnarDataSource):
     else:
         range = List(List(Float), help="Ranges in the same order as sample_variables")
         weights = String(default=None)
-        histograms = Dict(String, Dict(String, Any), help="""
+        histograms = Dict(String, Dict(String, Any), default={}, help="""
         Dictionary of the values to histogram.
         Keys are the names of the resulting columns, values are dictionaries with the only option supported being weights, the value of which is the column name with weights.
             """)
