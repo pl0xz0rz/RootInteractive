@@ -55,7 +55,8 @@ parameterArray = [
     {"name": "size", "value":7, "range":[0, 30]},
     {"name": "legendFontSize", "value":"13px", "options":["9px", "11px", "13px", "15px"]},
     {"name": "legendVisible", "value":True},
-    {"name": "nPoints", "range":[0, 1200], "value": 1000}
+    {"name": "nPoints", "range":[0, 1200], "value": 1000},
+    {"name": "yScale", "value":"linear", "options":["linear", "log"]}
 ]
 
 figureArray = [
@@ -67,7 +68,7 @@ figureArray = [
 #    [['D'], ['D*10'], {"size": 10, "errY": "errY","markers":markerFactor, "color":colorFactor,"legend_field":"DDC"}],
     #marker color works only once - should be constructed in wrapper
     [['D'], ['D*10'], {"size": 10, "errY": "errY"}],
-    {"size":"size", "legend_options": {"label_text_font_size": "legendFontSize", "visible": "legendVisible"}}
+    {"size":"size", "legend_options": {"label_text_font_size": "legendFontSize", "visible": "legendVisible"}, "y_axis_type": "yScale"}
 ]
 
 widgets="slider.A(0,1,0.05,0,1), slider.B(0,1,0.05,0,1), slider.C(0,1,0.01,0.1,1), slider.D(0,1,0.01,0,1), checkbox.Bool(1)"
@@ -92,12 +93,13 @@ widgetParams=[
     ['slider',["size"], {"name": "markerSize"}],
     ['select',["legendFontSize"], {"name": "legendFontSize"}],
     ['toggle', ['legendVisible'], {"name": "legendVisible"}],
-    ['spinner', ['nPoints'], {"name": "nPointsRender"}]
+    ['spinner', ['nPoints'], {"name": "nPointsRender"}],
+    ['select', ['yScale'], {"name": "yScale"}],
 ]
 
 widgetLayoutDesc={
     "Selection": [[0, 1, "widgetC"], [3, 4], ["widgetAA", 6],[7,8, "selectionText"], {'sizing_mode': 'scale_width'}],
-    "Graphics": [["colorZ", "X", "markerSize"], ["legendFontSize", "legendVisible", "nPointsRender"], {'sizing_mode': 'scale_width'}]
+    "Graphics": [["colorZ", "X", "markerSize", "yScale"], ["legendFontSize", "legendVisible", "nPointsRender"], {'sizing_mode': 'scale_width'}]
     }
 
 figureLayoutDesc={
