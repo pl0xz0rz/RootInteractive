@@ -28,6 +28,8 @@ from RootInteractive.InteractiveDrawing.bokeh.CDSJoin import CDSJoin
 from RootInteractive.InteractiveDrawing.bokeh.MultiSelectFilter import MultiSelectFilter
 from RootInteractive.InteractiveDrawing.bokeh.LazyTabs import LazyTabs
 from RootInteractive.InteractiveDrawing.bokeh.RangeFilter import RangeFilter
+from RootInteractive.InteractiveDrawing.bokeh.ToggleableScale import ToggleableScale
+from bokeh.models.scales import LinearScale, LogScale
 import numpy as np
 import pandas as pd
 import re
@@ -992,9 +994,23 @@ def bokehDrawArray(dataFrame, query, figureArray, histogramArray=[], parameterAr
                 plotDict[optionLocal["name"]] = plotI
             continue
         else:
+            callback_scale = "scale.active = mapping[this.value]"
+            x_axis_type = optionLocal['x_axis_type']
+            if x_axis_type in paramDict:
+                x_scale, inverse_mapping = makeBokehToggleableScale(paramDict[x_axis_type]["options"], paramDict[x_axis_type]["value"])
+                paramDict[x_axis_type]["subscribed_events"].append(["value", CustomJS(args={"mapping":inverse_mapping, "scale":x_scale}, code=callback_scale)])
+            else:
+                x_scale = makeBokehScale(x_axis_type)
+            y_axis_type = optionLocal['y_axis_type']
+            if y_axis_type in paramDict:
+                y_scale, inverse_mapping = makeBokehToggleableScale(paramDict[y_axis_type]["options"], paramDict[y_axis_type]["value"])
+                paramDict[y_axis_type]["subscribed_events"].append(["value", CustomJS(args={"mapping":inverse_mapping, "scale":y_scale}, code=callback_scale)])
+            else:
+                y_scale = makeBokehScale(y_axis_type)
             figureI = figure(plot_width=options['plot_width'], plot_height=options['plot_height'], 
-                             tools=options['tools'], x_axis_type=options['x_axis_type'],
-                             y_axis_type=options['y_axis_type'])
+                             tools=options['tools'])
+            figureI.x_scale = x_scale
+            figureI.y_scale = y_scale
 
         lengthX = len(variables[0])
         lengthY = len(variables[1])
@@ -1686,3 +1702,23 @@ def getHistogramAxisTitle(cdsDict, varName, cdsName, removeCdsName=True):
                 histoName, projectionIdx = cdsName.split("_")
                 return varName + " " + cdsDict[histoName]["variables"][int(projectionIdx)]
     return prefix+varName
+
+def makeBokehToggleableScale(options, default=None):
+    optionsScale = []
+    inverse_mapping = {}
+    for i, iOption in enumerate(options):
+        optionsScale.append(makeBokehScale(iOption))
+        inverse_mapping[iOption] = i
+    if default is None:
+        defaultIndex = 0
+    else:
+        defaultIndex = inverse_mapping[default]
+    return ToggleableScale(options=optionsScale, active=defaultIndex), inverse_mapping
+
+def makeBokehScale(scaleType):
+    if scaleType in ['linear', 'auto']:
+        return LinearScale()
+    elif scaleType == 'log':
+        return LogScale()
+    else:
+        raise NotImplementedError(f"Axis type: {scaleType} is not implemented")
