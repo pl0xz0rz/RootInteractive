@@ -6,7 +6,7 @@
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RVec.hxx"
 #include "ROOT/RDF/RInterface.hxx"
-#include "RDataFrame_TimeSeries.h"
+#include "RootInteractive/Tools/RDataFrame/RDataFrame_TimeSeries.h"
 #include "TRandom.h"
 #pragma link C++ class map<string,ROOT::VecOps::RVec<double> >+;
 
