@@ -85,24 +85,53 @@ auto getStat0(const ROOT::RVec<DataVal>& vecRef, const ROOT::RVec<DataTime>& tim
   }
   //
   DataVal* vecRefVal = (DataVal*)vecRef.data();   ///
-  for (int i = 0; i < vecSize; i++) {
-    double timeI = time0[i];
-    auto lower = std::lower_bound(timeRef.begin(), timeRef.end(), timeI); ///
-    int indexRefLower = std::distance(timeRef.begin(), lower);
-    int indexMin=indexRefLower>=0? indexRefLower:0;
-    int indexMax=indexRefLower<vecSizeRef? indexRefLower:vecSizeRef;
-    while (timeI<time0[indexMin]+deltaMax && indexMin>0) indexMin--;
-    while (timeI>time0[indexMax]-deltaMax && indexMax<vecSizeRef) indexMax++;
-    //ROOT::RVec<DataVal> take(&(vecRef[indexMin]),indexMax-indexMin+1);
-
-    const ROOT::RVec<DataVal> rtake( &(vecRefVal[indexMin]),indexMax-indexMin+1);
-    for (auto   & stat : statVector){
-        if (stat=="mean")    statMap[stat][i]=Mean(rtake);
-        if (stat=="std")     statMap[stat][i]=StdDev(rtake);
-        if (stat=="median")  statMap[stat][i]=TMath::Median(indexMax-indexMin+1,&(vecRefVal[indexMin]));
-    }
-
+  if(hasMeanStd){
+    int indexMin = 0;
+    int indexMax = 0;
+    DataVal slidingSum = DataVal(0);
+    DataVal slidingSqSum = DataVal(0);
+    for (int i = 0; i < vecSize; i++) {
+      DataTime timeI = time0[i];
+      DataTime timeMin = timeI-deltaMax;
+      DataTime timeMax = timeI+deltaMax;
+      while(indexMax<vecSizeRef && time0[indexMax] <= timeMax){
+        DataVal x = vecRefVal[indexMax];
+        slidingSum += x;
+        slidingSqSum += x*x;
+        ++indexMax;
+      }
+      while(indexMin<vecSizeRef && time0[indexMin] < timeMin){
+        DataVal x = vecRefVal[indexMin];
+        slidingSum -= x;
+        slidingSqSum -= x*x;
+        ++indexMin;
+      }
+      int rangeWidth = indexMax-indexMin;
+      int rangeMean = slidingSum/rangeWidth;
+      for (auto   & stat : statVector){
+          if (stat=="mean")    statMap[stat][i]=rangeMean;
+          if (stat=="std")     statMap[stat][i]=sqrt((slidingSqSum-rangeMean*slidingSum)/(rangeWidth-1));
+      }
+    }    
   }
+  if(hasMedian){
+    for (int i = 0; i < vecSize; i++) {
+      double timeI = time0[i];
+      auto lower = std::lower_bound(timeRef.begin(), timeRef.end(), timeI); ///
+      int indexRefLower = std::distance(timeRef.begin(), lower);
+      int indexMin=indexRefLower>=0? indexRefLower:0;
+      int indexMax=indexRefLower<vecSizeRef? indexRefLower:vecSizeRef;
+      while (timeI<time0[indexMin]+deltaMax && indexMin>0) indexMin--;
+      while (timeI>time0[indexMax]-deltaMax && indexMax<vecSizeRef) indexMax++;
+      //ROOT::RVec<DataVal> take(&(vecRef[indexMin]),indexMax-indexMin+1);
+
+      const ROOT::RVec<DataVal> rtake( &(vecRefVal[indexMin]),indexMax-indexMin+1);
+      for (auto   & stat : statVector){
+          if (stat=="median")  statMap[stat][i]=TMath::Median(indexMax-indexMin+1,&(vecRefVal[indexMin]));
+      }
+    }
+  }
+
   return statMap;
 }
 
