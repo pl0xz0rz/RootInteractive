@@ -76,8 +76,12 @@ auto getStat0(const ROOT::RVec<DataVal>& vecRef, const ROOT::RVec<DataTime>& tim
   int vecSizeRef = vecRef.size();
   Long64_t  work[vecSizeRef];
   std::map<string, ROOT::RVec<DataVal>> statMap;
+  bool hasMeanStd = false;
+  bool hasMedian = false;
   for (auto   & stat : statVector){
     statMap[stat]=ROOT::RVec<DataVal>(vecSize);
+    if(stat == "mean" || stat == "std") hasMeanStd = true;
+    if(stat == "median") hasMedian = true;
   }
   //
   DataVal* vecRefVal = (DataVal*)vecRef.data();   ///
