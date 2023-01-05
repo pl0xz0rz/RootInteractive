@@ -126,6 +126,8 @@ auto getStat0(const ROOT::RVec<DataVal>& vecRef, const ROOT::RVec<DataTime>& tim
     std::priority_queue<int, std::vector<int>, decltype(cmpMax)> queueHigh(cmpMin);
     std::vector<int> closedSet;
     int imbalance = 0;
+    int indexMin = 0;
+    int indexMax = 0;
     for (int i = 0; i < vecSize; i++) {
       DataTime timeI = time0[i];
       DataTime timeMin = timeI-deltaMax;
