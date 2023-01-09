@@ -116,18 +116,18 @@ auto getStat0(const ROOT::RVec<DataVal>& vecRef, const ROOT::RVec<DataTime>& tim
     }    
   }
   if(hasMedian){
-    auto cmpMin = [&vecRefVal](int left, int right) {
-      return vecRefVal[left] < vecRefVal[right];
+    int imbalance = 0;
+    int indexMin = 0;
+    int indexMax = 0;
+    auto cmpMin = [&vecRefVal, indexMin](int left, int right) {
+      return right < indexMin || vecRefVal[left] > vecRefVal[right];
     };
-    auto cmpMax = [&vecRefVal](int left, int right) {
-      return vecRefVal[left] > vecRefVal[right];
+    auto cmpMax = [&vecRefVal, indexMin](int left, int right) {
+      return right < indexMin || vecRefVal[left] < vecRefVal[right];
     };
     std::priority_queue<int, std::vector<int>, decltype(cmpMin)> queueLow(cmpMax);
     std::priority_queue<int, std::vector<int>, decltype(cmpMax)> queueHigh(cmpMin);
     std::vector<int> closedSet;
-    int imbalance = 0;
-    int indexMin = 0;
-    int indexMax = 0;
     for (int i = 0; i < vecSize; i++) {
       DataTime timeI = time0[i];
       DataTime timeMin = timeI-deltaMax;
@@ -142,26 +142,6 @@ auto getStat0(const ROOT::RVec<DataVal>& vecRef, const ROOT::RVec<DataTime>& tim
           queueHigh.push(indexMax);
           closedSet.push_back(-1);
           imbalance ++;
-        }
-        if(imbalance < -1){
-          while (!queueLow.empty() && queueLow.top() < indexMin){
-            queueLow.pop();
-          }
-          int y = queueLow.top();
-          queueHigh.push(y);
-          queueLow.pop();
-          closedSet[y] = -1; 
-          imbalance ++;
-        }
-        if(imbalance > 1){
-          while (!queueHigh.empty() && queueHigh.top() < indexMin){
-            queueHigh.pop();
-          }
-          int y = queueHigh.top();
-          queueLow.push(y);
-          queueHigh.pop();
-          closedSet[y] = 1; 
-          imbalance --;
         }
         ++indexMax;
       }
