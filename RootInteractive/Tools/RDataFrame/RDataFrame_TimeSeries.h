@@ -85,7 +85,6 @@ auto getStat0(const ROOT::RVec<DataVal>& vecRef, const ROOT::RVec<DataTime>& tim
     if(stat == "median") hasMedian = true;
   }
   //
-  DataVal* vecRefVal = (DataVal*)vecRef.data();   ///
   if(hasMeanStd){
     int indexMin = 0;
     int indexMax = 0;
@@ -96,13 +95,13 @@ auto getStat0(const ROOT::RVec<DataVal>& vecRef, const ROOT::RVec<DataTime>& tim
       DataTime timeMin = timeI-deltaMax;
       DataTime timeMax = timeI+deltaMax;
       while(indexMax<vecSizeRef && time0[indexMax] <= timeMax){
-        DataVal x = vecRefVal[indexMax];
+        DataVal x = vecRef[indexMax];
         slidingSum += x;
         slidingSqSum += x*x;
         ++indexMax;
       }
       while(indexMin<vecSizeRef && time0[indexMin] < timeMin){
-        DataVal x = vecRefVal[indexMin];
+        DataVal x = vecRef[indexMin];
         slidingSum -= x;
         slidingSqSum -= x*x;
         ++indexMin;
@@ -119,11 +118,11 @@ auto getStat0(const ROOT::RVec<DataVal>& vecRef, const ROOT::RVec<DataTime>& tim
     int imbalance = 0;
     int indexMin = 0;
     int indexMax = 0;
-    auto cmpMin = [&vecRefVal, indexMin](int left, int right) {
-      return right < indexMin || vecRefVal[left] > vecRefVal[right];
+    auto cmpMin = [&vecRef, indexMin](int left, int right) {
+      return right < indexMin || vecRef[left] > vecRef[right];
     };
-    auto cmpMax = [&vecRefVal, indexMin](int left, int right) {
-      return right < indexMin || vecRefVal[left] < vecRefVal[right];
+    auto cmpMax = [&vecRef, indexMin](int left, int right) {
+      return right < indexMin || vecRef[left] < vecRef[right];
     };
     std::priority_queue<int, std::vector<int>, decltype(cmpMin)> queueLow(cmpMax);
     std::priority_queue<int, std::vector<int>, decltype(cmpMax)> queueHigh(cmpMin);
