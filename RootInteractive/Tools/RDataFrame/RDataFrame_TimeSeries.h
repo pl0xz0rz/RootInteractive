@@ -128,6 +128,7 @@ auto getStat1(const ROOT::RVec<DataVal>& vecRef, const ROOT::RVec<DataTime>& tim
     std::priority_queue<int, std::vector<int>, decltype(cmpMin)> queueLow(cmpMax);
     std::priority_queue<int, std::vector<int>, decltype(cmpMax)> queueHigh(cmpMin);
     std::deque<int> closedSet;
+    auto statMedian = statMap["median"];
     for (int i = 0; i < vecSize; i++) {
       DataTime timeI = time0[i];
       DataTime timeMin = timeI-deltaMax;
@@ -152,31 +153,31 @@ auto getStat1(const ROOT::RVec<DataVal>& vecRef, const ROOT::RVec<DataTime>& tim
         ++indexMin;
       }
       while(imbalance < -1){
-        while (!queueLow.empty() && queueLow.top() < indexMin){
+        while (queueLow.top() < indexMin){
           queueLow.pop();
         }
         int y = queueLow.top();
         queueHigh.push(y);
         queueLow.pop();
-        closedSet[y] = -1; 
+        closedSet[y-indexMin] = -1; 
         imbalance ++;
       }
       while(imbalance > 1){
-        while (!queueHigh.empty() && queueHigh.top() < indexMin){
+        while (queueHigh.top() < indexMin){
           queueHigh.pop();
         }
         int y = queueHigh.top();
         queueLow.push(y);
         queueHigh.pop();
-        closedSet[y] = 1; 
+        closedSet[y-indexMin] = 1; 
         imbalance --;
       }
       if(imbalance == 1){
-        statMap["median"][i] = vecRefVal[queueHigh.top()];
+        statMedian[i] = vecRefVal[queueHigh.top()];
       } else if(imbalance == 0){
-        statMap["median"][i] = (vecRefVal[queueHigh.top()] + vecRefVal[queueLow.top()]) / DataVal(2);
+        statMedian[i] = (vecRefVal[queueHigh.top()] + vecRefVal[queueLow.top()]) / DataVal(2);
       } else if(imbalance == -1){
-        statMap["median"][i] = vecRefVal[queueLow.top()]
+        statMedian[i] = vecRefVal[queueLow.top()]
       } 
     }
   }
