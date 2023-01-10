@@ -7,6 +7,7 @@
 #include "ROOT/RDF/RInterface.hxx"
 #include <map>
 #include <queue>
+#include <deque>
 
 #pragma link map<string,ROOT::VecOps::RVec<double> >
 
@@ -70,7 +71,7 @@ template <typename DataTime, typename DataVal>
 ///                           - https://bookdown.org/rdpeng/timeseriesbook/filtering-time-series.html
 /// \param deltaMax        - local neighborhood to process
 /// \return
-auto getStat0(const ROOT::RVec<DataVal>& vecRef, const ROOT::RVec<DataTime>& timeRef, const ROOT::RVec<DataTime>& time0, std::vector<std::string> statVector, float deltaMax)
+auto getStat1(const ROOT::RVec<DataVal>& vecRef, const ROOT::RVec<DataTime>& timeRef, const ROOT::RVec<DataTime>& time0, std::vector<std::string> statVector, float deltaMax)
 {
   bool lower = true;
   int vecSize = time0.size();
@@ -126,7 +127,7 @@ auto getStat0(const ROOT::RVec<DataVal>& vecRef, const ROOT::RVec<DataTime>& tim
     };
     std::priority_queue<int, std::vector<int>, decltype(cmpMin)> queueLow(cmpMax);
     std::priority_queue<int, std::vector<int>, decltype(cmpMax)> queueHigh(cmpMin);
-    std::vector<int> closedSet;
+    std::deque<int> closedSet;
     for (int i = 0; i < vecSize; i++) {
       DataTime timeI = time0[i];
       DataTime timeMin = timeI-deltaMax;
@@ -147,6 +148,7 @@ auto getStat0(const ROOT::RVec<DataVal>& vecRef, const ROOT::RVec<DataTime>& tim
       while(indexMin<vecSizeRef && time0[indexMin] < timeMin){
         DataVal x = vecRefVal[indexMin];
         imbalance += closedSet[indexMin];
+        closedSet.pop_front();
         ++indexMin;
       }
       while(imbalance < -1){
