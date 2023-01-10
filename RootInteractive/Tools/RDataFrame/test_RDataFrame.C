@@ -50,27 +50,3 @@ void testRDFSeries(int nTracks){
      rdf.Snapshot("rdfSeries","rdfSeriesTest1.root");
 
 }
-
-void testRDFSeriesNoMedian(int nTracks){
-    // nTracks=100
-     ROOT::RDataFrame df(nTracks);
-     auto rdf = df.Define("nPoints", "size_t(10+gRandom->Rndm()*100)");
-     auto vecUni =  [] (size_t nPoints){auto vecTime=ROOT::RVec<double>(nPoints); vecTime.resize(nPoints); for (size_t i=0; i<nPoints; i++) vecTime[i]=float(i)/nPoints; return vecTime;};
-     auto vecNoise =  [] (size_t nPoints){auto vecNoise=ROOT::RVec<double>(nPoints); vecNoise.resize(nPoints); for (size_t i=0; i<nPoints; i++) vecNoise[i]=gRandom->Gaus()*0.1; return vecNoise;};
-     rdf=  rdf.Define("vecTime",vecUni,{"nPoints"});
-     rdf=  rdf.Define("vecNoise",vecNoise,{"nPoints"});
-     rdf=  rdf.Define("sinTime","sin(vecTime*TMath::TwoPi())");
-     rdf=  rdf.Define("sinTimeN","sinTime+vecNoise");
-     rdf=  rdf.Define("range0","float(0.02)");
-     //
-     {
-        std::vector<std::string> statVector={"mean","std"};
-        rdf=  rdf.Define("statVector",[statVector](){return statVector;});
-     }
-     rdf=  rdf.Define("statMap",getStat0<double,double>,{"sinTimeN","vecTime","vecTime","statVector","range0"});
-     rdf = rdf.Define("sinTimeMean","statMap[\"mean\"]");
-//     rdf = rdf.Define("sinTimeMedian","statMap[\"median\"]");
-     rdf = rdf.Define("sinTimeStd","statMap[\"std\"]");
-     rdf.Snapshot("rdfSeries","rdfSeriesTest0.root");
-
-}
