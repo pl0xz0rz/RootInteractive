@@ -9,9 +9,10 @@ from RootInteractive.InteractiveDrawing.bokeh.ConcatenatedString import Concaten
 from RootInteractive.InteractiveDrawing.bokeh.compileVarName import getOrMakeColumns
 from RootInteractive.Tools.aliTreePlayer import *
 from bokeh.layouts import *
+from bokeh.models.layouts import TabPanel
 import logging
 from IPython import get_ipython
-from bokeh.models.widgets import DataTable, Select, Slider, RangeSlider, MultiSelect, Panel, TableColumn, TextAreaInput, Toggle, Spinner
+from bokeh.models.widgets import DataTable, Select, Slider, RangeSlider, MultiSelect, TableColumn, TextAreaInput, Toggle, Spinner
 from bokeh.models import CustomJS, ColumnDataSource
 from RootInteractive.InteractiveDrawing.bokeh.bokehVisJS3DGraph import BokehVisJSGraph3D
 from RootInteractive.InteractiveDrawing.bokeh.HistogramCDS import HistogramCDS
@@ -205,7 +206,7 @@ def processBokehLayoutArrayRenderers(widgetLayoutDesc, widgetArray: list, widget
         renderers = []
         for i, iPanel in widgetLayoutDesc.items():
             child, childRenderers = processBokehLayoutArrayRenderers(iPanel, widgetArray, widgetDict)
-            tabs.append(Panel(child=child, title=i))
+            tabs.append(TabPanel(child=child, title=i))
             renderers.append(childRenderers)
         tabsModel.tabs = tabs
         tabsModel.renderers = renderers
@@ -214,7 +215,7 @@ def processBokehLayoutArrayRenderers(widgetLayoutDesc, widgetArray: list, widget
         options = {
             'commonX': -1, 'commonY': -1,
             'x_visible': 1, 'y_visible': 1,
-            'plot_width': -1, 'plot_height': -1,
+            'width': -1, 'height': -1,
             'sizing_mode': 'scale_width',
             'legend_visible': True
         }
@@ -265,9 +266,9 @@ def processBokehLayoutArrayRenderers(widgetLayoutDesc, widgetArray: list, widget
         if hasattr(figure, 'plot_width'):
             if optionLocal["plot_width"] > 0:
                 plot_width = int(optionLocal["plot_width"] / nRows)
-                figure.plot_width = plot_width
+                figure.width = plot_width
             if optionLocal["plot_height"] > 0:
-                figure.plot_height = optionLocal["plot_height"]
+                figure.height = optionLocal["plot_height"]
             if figure.legend:
                 figure.legend.visible = optionLocal["legend_visible"]
         if type(figure).__name__ == "DataTable":
@@ -870,7 +871,7 @@ def bokehDrawArray(dataFrame, query, figureArray, histogramArray=[], parameterAr
                 plotDict[optionLocal["name"]] = plotI
             continue
         else:
-            figureI = figure(plot_width=options['plot_width'], plot_height=options['plot_height'], 
+            figureI = figure(width=options['plot_width'], height=options['plot_height'], 
                              tools=options['tools'], x_axis_type=options['x_axis_type'],
                              y_axis_type=options['y_axis_type'])
 
