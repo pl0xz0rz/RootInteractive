@@ -23,12 +23,12 @@ export class CustomJSNAryFunction extends Model {
 
   static __name__ = "CustomJSNAryFunction"
 
-  static init_CustomJSNAryFunction() {
-    this.define<CustomJSNAryFunction.Props>(({Array, String})=>({
-      parameters:  [p.Instance, {}],
+  static {
+    this.define<CustomJSNAryFunction.Props>(({Array, String, Any})=>({
+      parameters:  [Any, {}],
       fields: [Array(String)],
-      func:    [ String ],
-      v_func:  [String]
+      func:    [ String, "" ],
+      v_func:  [String, ""]
     }))
   }
 

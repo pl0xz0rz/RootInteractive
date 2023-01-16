@@ -24,10 +24,10 @@ export class CDSAlias extends ColumnarDataSource {
 
   cached_columns: Set<string>
 
-  static init_CDSAlias() {
-    this.define<CDSAlias.Props>(({Ref, Boolean})=>({
+  static {
+    this.define<CDSAlias.Props>(({Ref, Boolean, Any})=>({
       source:  [Ref(ColumnarDataSource)],
-      mapping:    [ p.Instance, {} ],
+      mapping:    [ Any, {} ],
       includeOrigColumns: [Boolean, true]
     }))
   }

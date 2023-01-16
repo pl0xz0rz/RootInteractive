@@ -144,10 +144,10 @@ export class HistoNdProfile extends ColumnarDataSource {
 
   static __name__ = "HistoNdProfile"
 
-  static init_HistoNdProfile() {
+  static {
 
-    this.define<HistoNdProfile.Props>(({Ref, Array, Number, Int, Boolean, String, Nullable})=>({
-      source:  [Ref(HistoNdCDS)],
+    this.define<HistoNdProfile.Props>(({Array, Number, Int, Boolean, String, Nullable, Any})=>({
+      source:  [Any],
       axis_idx: [Int, 0],
       quantiles: [Array(Number), []], // This is the list of all quantiles to compute, length is NOT equal to CDS length
       sum_range: [Array(Array(Number)), []],

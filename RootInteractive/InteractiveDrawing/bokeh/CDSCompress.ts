@@ -95,11 +95,11 @@ export class CDSCompress extends ColumnDataSource {
 
   static __name__ = "CDSCompress"
 
-  static init_CDSCompress() {
+  static {
 
-    this.define<CDSCompress.Props>(()=>({
-        inputData:    [ p.Instance ],
-        sizeMap:    [ p.Instance ]
+    this.define<CDSCompress.Props>(({Any})=>({
+        inputData:    [ Any ],
+        sizeMap:    [ Any ]
     }))
   }
 

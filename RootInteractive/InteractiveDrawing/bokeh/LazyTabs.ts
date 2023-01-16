@@ -29,11 +29,11 @@ export namespace LazyTabs {
     // typos, which would prohibit serialization/deserialization of this model.
     static __name__ = "LazyTabs"
   
-    static init_LazyTabs() {
+    static {
       // This is usually boilerplate. In some cases there may not be a view.
       this.prototype.default_view = TabsView
-      this.define<LazyTabs.Props>(({Ref, Array, Or, Boolean})=>({
-        renderers:  [Array(Array(Or(Ref(LazyTabs), Ref(DownsamplerCDS))))],
+      this.define<LazyTabs.Props>(({Array, Boolean, Any})=>({
+        renderers:  [Array(Array(Any))],
         watched: [Boolean, true]
       }))
       }

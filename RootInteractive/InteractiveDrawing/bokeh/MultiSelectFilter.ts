@@ -26,11 +26,11 @@ export class MultiSelectFilter extends Model {
 
   static __name__ = "MultiSelectFilter"
 
-  static init_MultiSelectFilter() {
-    this.define<MultiSelectFilter.Props>(({Ref, Int, Array, String})=>({
+  static {
+    this.define<MultiSelectFilter.Props>(({Ref, Int, Array, String, Any})=>({
       source:  [Ref(ColumnarDataSource)],
       selected:    [ Array(String), [] ],
-      mapping:    [p.Instance],
+      mapping:    [Any, {}],
       mask: [Int, -1],
       field: [String],
       how: [String, "any"]

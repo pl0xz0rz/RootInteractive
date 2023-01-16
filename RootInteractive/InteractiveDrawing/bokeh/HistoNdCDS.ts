@@ -33,7 +33,7 @@ export class HistoNdCDS extends ColumnarDataSource {
 
   static __name__ = "HistoNdCDS"
 
-  static init_HistoNdCDS() {
+  static {
 
     this.define<HistoNdCDS.Props>(({Ref, Array, Nullable, Number, Int, String, Any})=>({
       source:  [Ref(ColumnarDataSource)],

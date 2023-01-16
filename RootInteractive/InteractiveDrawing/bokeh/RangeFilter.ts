@@ -23,7 +23,7 @@ export class RangeFilter extends Model {
 
   static __name__ = "RangeFilter"
 
-  static init_RangeFilter() {
+  static {
     this.define<RangeFilter.Props>(({Ref, Number, String, Array})=>({
       source:  [Ref(ColumnarDataSource)],
       field: [String],

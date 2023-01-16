@@ -22,7 +22,7 @@ export class DownsamplerCDS extends ColumnarDataSource {
 
   static __name__ = "DownsamplerCDS"
 
-  static init_DownsamplerCDS() {
+  static {
     this.define<DownsamplerCDS.Props>(({Ref, Int, Boolean})=>({
       source:  [Ref(ColumnarDataSource)],
       nPoints:    [ Int, 300 ],
