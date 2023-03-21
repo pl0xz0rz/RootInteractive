@@ -482,7 +482,7 @@ def bokehDrawArray(dataFrame, query, figureArray, histogramArray=[], parameterAr
     memoized_columns = {}
     sources = set()
 
-    meta = dfQuery.meta.metaData.copy()
+    meta = cdsDict[None]["meta"]
 
     optionsChangeList = []
     for i, variables in enumerate(figureArray):
