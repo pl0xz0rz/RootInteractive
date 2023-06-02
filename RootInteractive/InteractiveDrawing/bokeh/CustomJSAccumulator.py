@@ -5,8 +5,7 @@ class CustomJSAccumulator(Model):
     __implementation__ = "CustomJSAccumulator.ts"
 
     parameters = Dict(String, Any, help="Extra arguments to call the function with")
-    fields = List(String, default=["x"], help="List of positional arguments - might be made optional in the future")
-    initial_value = Any(help="Initial value for the accumulator - ignored if v_func is specified")
+    fields = List(String, help="List of positional arguments - might be made optional in the future")
     func = String(serialized=True, help="Code to be computed on the client - scalar case")
     v_func = String(serialized=True, help="Code to be computed on the client - vector case")
 
