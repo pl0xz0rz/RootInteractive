@@ -209,6 +209,7 @@ export class LazyIntersectionFilter extends RIFilter {
               } else {
                 this._changed_values ||= from_bits_8(this.old_values[x], null, counts)
               }
+              this.old_values[x]?.fill(-1)
           } else {
             const l = this.counts.length
             for(let i=0; i < l; i++){
