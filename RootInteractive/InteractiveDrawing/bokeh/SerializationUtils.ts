@@ -175,34 +175,37 @@ export function quantizeSinhArray(array: number[], sigma0: number, sigma1: numbe
   return {"array": encodedArray, "sentinels": {"nan": nanSentinel, "posinf":posinfSentinel, "neginf":neginfSentinel}}
 }
 
-export function interpretArray(ab: ArrayBuffer, byteorder: "little" | "big", dtype: string){
+export function interpretArray(ab: ArrayBuffer, byteorder: "little" | "big", dtype: string, offset: number = 0, bytelength?: number){
   if(byteorder !== BYTE_ORDER){
     swap(ab, dtype)
   }
+  if (bytelength === undefined){
+    bytelength = ab.byteLength - offset
+  }
   if (dtype == "int8"){
-    return new Int8Array(ab)
+    return new Int8Array(ab, offset, bytelength)
   }
   if (dtype == "uint8"){
-    return new Uint8Array(ab)
+    return new Uint8Array(ab, offset, bytelength)
   }
   if (dtype == "int16"){
-    return new Int16Array(ab)
+    return new Int16Array(ab, offset, bytelength >> 1)
   }
   if (dtype == "uint16"){
-    return new Uint16Array(ab)
+    return new Uint16Array(ab, offset, bytelength >> 1)
   }
   if (dtype == "int32"){
-    return new Int32Array(ab)
+    return new Int32Array(ab, offset, bytelength >> 2)
   }
   if (dtype == "uint32"){
-    return new Uint32Array(ab)
+    return new Uint32Array(ab, offset, bytelength >> 2)
   }
   if (dtype == "float32"){
-    const arrayOut = new Float32Array(ab)
+    const arrayOut = new Float32Array(ab, offset, bytelength >> 2)
     return new Float64Array(arrayOut)
   }
   if (dtype == "float64"){
-    return new Float64Array(ab)
+    return new Float64Array(ab, offset, bytelength >> 3)
   }
   throw new Error(`Unknown dtype: ${dtype}`)
 }
@@ -258,19 +261,21 @@ export function decodeArray(arrayIn: any, instructions: any, env: any){
       }
       if(action == "array"){
         const dtype = actionParams
-        const ab = arrayOut.buffer.slice(arrayOut.byteOffset, arrayOut.byteOffset + arrayOut.byteLength)
-        arrayOut = interpretArray(ab, env.byteorder, dtype)
+        const ab = arrayOut.buffer
+        arrayOut = interpretArray(ab, env.byteorder, dtype, arrayOut.byteOffset, arrayOut.byteLength)
       }
       if (action == "code") {
         if (actionParams.version){
           const {len0, dtype0, len1, dtype1} = actionParams
-          const ab0 = arrayOut.buffer.slice(arrayOut.byteOffset, arrayOut.byteOffset + len0)
-          const arrayCode = interpretArray(ab0, env.byteorder, dtype0)
+          const ab = arrayOut.buffer
+          const arrayCode = interpretArray(ab, env.byteorder, dtype0, arrayOut.byteOffset, len0)
           const size = arrayCode.length
-          const ab1 = arrayOut.buffer.slice(arrayOut.byteOffset + len0, arrayOut.byteOffset + len0 + len1)
-          const valueCode = interpretArray(ab1, env.byteorder, dtype1)
+          const valueCode = interpretArray(ab, env.byteorder, dtype1, arrayOut.byteOffset + len0, len1)
           let arrayOutNew = makeTypedArray(size, dtype1)
           for (let j = 0; j < size; j++) {
+            if (arrayCode[j] < 0 || arrayCode[j] >= valueCode.length) {
+              throw new Error(`Index out of bounds: ${arrayCode[j]} for valueCode of length ${valueCode.length}`)
+            }
             arrayOutNew[j] = valueCode[arrayCode[j]]
           }
           arrayOut=arrayOutNew
@@ -279,6 +284,9 @@ export function decodeArray(arrayIn: any, instructions: any, env: any){
         let size = arrayOut.length
         let arrayOutNew = new Array(arrayOut.length)
         for (let j = 0; j < size; j++) {
+          if (arrayOut[j] < 0 || arrayOut[j] >= actionParams.valueCode.length) {
+            throw new Error(`Index out of bounds: ${arrayOut[j]} for valueCode of length ${actionParams.valueCode.length}`)
+          }
           arrayOutNew[j] = actionParams.valueCode[arrayOut[j]]
         }
         arrayOut=arrayOutNew
