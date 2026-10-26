@@ -14,17 +14,43 @@ function is_little_endian(): boolean {
 
 export const BYTE_ORDER = is_little_endian() ? "little" : "big";
 
-function swap16(buffer: ArrayBuffer) {
+function swap16(buffer: ArrayBuffer, offset?: number, bytelength?: number) {
   const x = new Uint8Array(buffer);
-  for (let i = 0, end = x.length; i < end; i += 2) {
+  if (offset === undefined) {
+    offset = 0;
+  }
+  if (bytelength === undefined) {
+    bytelength = x.length - offset;
+  }
+    const elementSize = 2;
+
+  if (bytelength % elementSize !== 0) {
+    throw new RangeError(
+      `Invalid byte length ${bytelength} for 16-bit swap. Must be a multiple of ${elementSize}.`
+    );
+  }
+  for (let i = offset, end = offset + bytelength; i < end; i += 2) {
       const t = x[i];
       x[i] = x[i + 1];
       x[i + 1] = t;
   }
 }
-function swap32(buffer: ArrayBuffer) {
+function swap32(buffer: ArrayBuffer, offset?: number, bytelength?: number) {
   const x = new Uint8Array(buffer);
-  for (let i = 0, end = x.length; i < end; i += 4) {
+  if (offset === undefined) {
+    offset = 0;
+  }
+  if (bytelength === undefined) {
+    bytelength = x.length - offset;
+  }
+  const elementSize = 4;
+
+  if (bytelength % elementSize !== 0) {
+    throw new RangeError(
+      `Invalid byte length ${bytelength} for 32-bit swap. Must be a multiple of ${elementSize}.`
+    );
+  }
+  for (let i = offset, end = offset + bytelength; i < end; i += 4) {
       let t = x[i];
       x[i] = x[i + 3];
       x[i + 3] = t;
@@ -33,9 +59,22 @@ function swap32(buffer: ArrayBuffer) {
       x[i + 2] = t;
   }
 }
-function swap64(buffer: ArrayBuffer) {
+function swap64(buffer: ArrayBuffer, offset?: number, bytelength?: number) {
   const x = new Uint8Array(buffer);
-  for (let i = 0, end = x.length; i < end; i += 8) {
+  if (offset === undefined) {
+    offset = 0;
+  }
+  if (bytelength === undefined) {
+    bytelength = x.length - offset;
+  }
+  const elementSize = 8;
+
+  if (bytelength % elementSize !== 0) {
+    throw new RangeError(
+      `Invalid byte length ${bytelength} for 64-bit swap. Must be a multiple of ${elementSize}.`
+    );
+  }
+  for (let i = offset, end = offset + bytelength; i < end; i += 8) {
       let t = x[i];
       x[i] = x[i + 7];
       x[i + 7] = t;
@@ -51,19 +90,19 @@ function swap64(buffer: ArrayBuffer) {
   }
 }
 
-export function swap(buffer: ArrayBuffer, dtype: string) {
+export function swap(buffer: ArrayBuffer, dtype: string, offset?: number, bytelength?: number) {
   switch (dtype) {
       case "uint16":
       case "int16":
-          swap16(buffer);
+          swap16(buffer, offset, bytelength);
           break;
       case "uint32":
       case "int32":
       case "float32":
-          swap32(buffer);
+          swap32(buffer, offset, bytelength);
           break;
       case "float64":
-          swap64(buffer);
+          swap64(buffer, offset, bytelength);
           break;
   }
 }
@@ -176,11 +215,11 @@ export function quantizeSinhArray(array: number[], sigma0: number, sigma1: numbe
 }
 
 export function interpretArray(ab: ArrayBuffer, byteorder: "little" | "big", dtype: string, offset: number = 0, bytelength?: number){
-  if(byteorder !== BYTE_ORDER){
-    swap(ab, dtype)
-  }
   if (bytelength === undefined){
     bytelength = ab.byteLength - offset
+  }
+  if(byteorder !== BYTE_ORDER){
+    swap(ab, dtype, offset, bytelength)
   }
   if (dtype == "int8"){
     return new Int8Array(ab, offset, bytelength)
