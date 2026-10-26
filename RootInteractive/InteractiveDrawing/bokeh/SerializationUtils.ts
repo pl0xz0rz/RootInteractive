@@ -277,6 +277,25 @@ function makeTypedArray(n_elems: number, dtype: string){
   throw new Error(`Unknown dtype: ${dtype}`)
 }
 
+function getElementSize(dtype: string): number {
+  switch (dtype) {
+    case "int8":
+    case "uint8":
+      return 1;
+    case "int16":
+    case "uint16":
+      return 2;
+    case "int32":
+    case "uint32":
+    case "float32":
+      return 4;
+    case "float64":
+      return 8;
+    default:
+      throw new Error(`Unknown dtype: ${dtype}`);
+  }
+}
+
 export function decodeArray(arrayIn: any, instructions: any, env: any){
   const inflate = env.builtins.inflate
   const enableDithering = env.enableDithering
@@ -309,7 +328,16 @@ export function decodeArray(arrayIn: any, instructions: any, env: any){
           const ab = arrayOut.buffer
           const arrayCode = interpretArray(ab, env.byteorder, dtype0, arrayOut.byteOffset, len0)
           const size = arrayCode.length
-          const valueCode = interpretArray(ab, env.byteorder, dtype1, arrayOut.byteOffset + len0, len1)
+          const elementSize = getElementSize(dtype1)
+          let ab1: ArrayBuffer
+          let valueCode: any
+          if((arrayOut.byteOffset + len0) % elementSize !== 0){
+            ab1 = ab.slice(arrayOut.byteOffset + len0, arrayOut.byteOffset + len0 + len1)
+            valueCode = interpretArray(ab1, env.byteorder, dtype1, 0, len1)
+          } else {
+            ab1 = ab
+            valueCode = interpretArray(ab1, env.byteorder, dtype1, arrayOut.byteOffset + len0, len1)
+          }
           let arrayOutNew = makeTypedArray(size, dtype1)
           for (let j = 0; j < size; j++) {
             if (arrayCode[j] < 0 || arrayCode[j] >= valueCode.length) {
