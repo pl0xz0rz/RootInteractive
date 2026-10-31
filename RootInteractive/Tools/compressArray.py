@@ -239,11 +239,11 @@ def compressArray(inputArray, actionArray, keepValues=False, verbosity=0):
                 for i, value in enumerate(values):
                     dictValues[value] = i
                 if values.size < 2 ** 8:
-                    currentArray = currentArray.map(dictValues).astype("int8")
+                    currentArray = currentArray.map(dictValues).astype("uint8")
                 elif values.size < 2 ** 16:
-                    currentArray = currentArray.map(dictValues).astype("int16")
+                    currentArray = currentArray.map(dictValues).astype("uint16")
                 else:
-                    currentArray = currentArray.map(dictValues).astype("int32")
+                    currentArray = currentArray.map(dictValues).astype("uint32")
                 dtype0 = currentArray.dtype
                 dtype1 = values.dtype
                 if dtype1.kind == 'O':
